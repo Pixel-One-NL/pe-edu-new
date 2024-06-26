@@ -13,6 +13,7 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\Filter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
@@ -55,14 +56,19 @@ class MeetingResource extends Resource
                     ->falseIcon('heroicon-o-x-mark'),
             ])
             ->filters([
-                //
+                Filter::make('only_past')
+                    ->label('Alleen verleden meetings')
+                    ->toggle()
+                    ->default(true)
+                    ->query(fn (Builder $query): Builder => $query->where('end_date_time', '<', now())),
             ])
             ->actions([
                 Action::make('export')
                     ->label('Exporteer')
                     ->action(fn ($record) => dispatch(new \App\Jobs\ExportMeeting($record)))
-                    ->requiresConfirmation(),
-            ])
+                    ->requiresConfirmation()
+                    ->visible(fn ($record) => $record->attendances->count() > 0),
+                    ])
             ->bulkActions([
 
             ])

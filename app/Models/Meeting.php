@@ -19,6 +19,9 @@ class Meeting extends Model
         'planned_course_eduframe_id',
         'description',
         'pe_code',
+        'exported',
+        'exported_at',
+        'export_xml',
     ];
 
     /**
@@ -61,6 +64,16 @@ class Meeting extends Model
     public function getIsExportedAttribute()
     {
         return $this->attendances->where('exported', true)->count() > 0;
+    }
+
+    /**
+     * Get the exportable status of the meeting
+     * 
+     * @return bool
+     */
+    public function getExportableAttribute()
+    {
+        return $this->attendances->count() > 0 && !$this->is_exported;
     }
 
     /**

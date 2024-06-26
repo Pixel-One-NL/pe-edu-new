@@ -116,25 +116,10 @@ class ExportMeeting implements ShouldQueue
         Log::debug('Request XML: ' . $requestXML->asXML());
         Log::debug('Response XML: ', ['response' => $response->getBody()->getContents()]);
 
-        // $peOnline = Http::withHeaders([
-        //     'Content-Type' => 'text/xml; charset=utf-8',
-        //     'SOAPAction'   => 'https://www.pe-online.org/pe-services/PE_AttendanceElearning/WriteAttendance/ProcessXML',
-        // ]);
-
-        // $requestXML = new \SimpleXMLElement('<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"/>');
-        // $body       = $requestXML->addChild('soap:Body');
-        // $processXML = $body->addChild('ProcessXML', null, 'https://www.pe-online.org/pe-services/PE_AttendanceElearning/WriteAttendance');
-        // $processXML->addChild('sXML', htmlspecialchars($this->getXmlRequest()->asXML()));
-
-        // $response = $peOnline->post('https://acc.pe-online.org/pe-services/pe-attendanceelearning/WriteAttendance.asmx', $requestXML->asXML());
-
-        // $this->meeting->exported    = true;
-        // $this->meeting->exported_at = now();
-        // // $this->meeting->export_xml  = $requestXML->asXML();
-        // $this->meeting->save();
-
-        // Log::info('Exported meeting ' . $this->meeting->id);
-        // Log::debug('Request XML: ' . $requestXML->asXML());
-        // Log::debug('Response XML: ', ['response' => $response]);
+        $$this->meeting->update([
+            'exported'    => true,
+            'exported_at' => now(),
+            'export_xml'  => $requestXML->asXML(),
+        ]);
     }
 }
