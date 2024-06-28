@@ -39,7 +39,12 @@ class MeetingResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('plannedCourse.course.name')
-                    ->label('PE Online Code'),
+                    ->label('Cursus naam')
+                    ->searchable(),
+
+                TextColumn::make('plannedCourse.course.code')
+                    ->label('Cursus code')
+                    ->searchable(),
 
                 TextColumn::make('start_date_time')
                     ->label('Start datum')
