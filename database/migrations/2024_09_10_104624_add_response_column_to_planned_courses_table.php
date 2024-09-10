@@ -12,6 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('planned_courses', function (Blueprint $table) {
+            $table->dateTime('exported_at')->nullable();
             $table->text('response')->nullable()->after('exported_at');
         });
     }
@@ -22,6 +23,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('planned_courses', function (Blueprint $table) {
+            $table->dropColumn('exported_at');
             $table->dropColumn('response');
         });
     }
