@@ -19,6 +19,7 @@ class PlannedCourse extends Model
         'duration_in_days',
         'status',
         'eduframe_id',
+        'response',
     ];
 
     /**
@@ -51,6 +52,16 @@ class PlannedCourse extends Model
     public function enrollments()
     {
         return $this->hasMany(Enrollment::class, 'planned_course_eduframe_id', 'eduframe_id');
+    }
+
+    /**
+     * Get the meetings for the planned course.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function meetings()
+    {
+        return $this->hasMany(Meeting::class, 'planned_course_eduframe_id', 'eduframe_id');
     }
 
     /**

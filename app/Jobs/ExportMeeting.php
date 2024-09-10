@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use GuzzleHttp\Exception\RequestException;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -101,6 +102,13 @@ class ExportMeeting implements ShouldQueue
                 'Content-Type' => 'text/xml; charset=utf-8',
                 'SOAPAction'   => 'https://www.pe-online.org/pe-services/PE_AttendanceElearning/WriteAttendance/ProcessXML',
             ],
+            'request.options' => [
+                'exceptions' => false,
+            ],
+            'http_errors' => false,
+            'defaults' => [
+                'exceptions' => false,
+            ],
         ]);
 
         $requestXML = new \SimpleXMLElement('<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"/>');
@@ -108,9 +116,23 @@ class ExportMeeting implements ShouldQueue
         $processXML = $body->addChild('ProcessXML', null, 'https://www.pe-online.org/pe-services/PE_AttendanceElearning/WriteAttendance');
         $processXML->addChild('sXML', htmlspecialchars($this->getXmlRequest()->asXML()));
 
-        $response = $peClient->post('', [
-            'body' => $requestXML->asXML(),
-        ]);
+        try {
+            $response = $peClient->post('', [
+                'body' => $requestXML->asXML(),
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to export meeting 1 ' . $this->meeting->id, ['exception' => $e]);
+            return;
+        } catch (\Throwable $e) {
+            Log::error('Failed to export meeting 2 ' . $this->meeting->id, ['exception' => $e]);
+            return;
+        } catch (\Error $e) {
+            Log::error('Failed to export meeting 3 ' . $this->meeting->id, ['exception' => $e]);
+            return;
+        } catch (RequestException $e) {
+            Log::error('Failed to export meeting 4 ' . $this->meeting->id, ['exception' => $e]);
+            return;
+        }
 
         Log::info('Exported meeting ' . $this->meeting->id);
         Log::debug('Request XML: ' . $requestXML->asXML());

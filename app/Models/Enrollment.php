@@ -54,6 +54,16 @@ class Enrollment extends Model
     }
 
     /**
+     * Get the attendance for the enrollment.
+     * 
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function attendances()
+    {
+        return $this->hasMany(Attendance::class, 'enrollment_eduframe_id', 'eduframe_id');
+    }
+
+    /**
      * Import the data from Eduframe response
      * 
      * @param array
