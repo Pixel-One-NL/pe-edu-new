@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class PlannedCourse extends Model
 {
@@ -20,6 +21,10 @@ class PlannedCourse extends Model
         'status',
         'eduframe_id',
         'response',
+        'edition_id',
+        'exported_at',
+        'response',
+        'pe_course_id',
     ];
 
     /**
@@ -32,6 +37,8 @@ class PlannedCourse extends Model
         'updated_at' => 'datetime',
         'start_date' => 'date',
         'end_date'   => 'date',
+        'exported_at' => 'datetime',
+        'exported_successfully' => 'boolean',
     ];
 
     /**
@@ -47,7 +54,7 @@ class PlannedCourse extends Model
     /**
      * Get the enrollments for the planned course.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @return HasMany
      */
     public function enrollments()
     {
@@ -57,16 +64,62 @@ class PlannedCourse extends Model
     /**
      * Get the meetings for the planned course.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @return HasMany
      */
-    public function meetings()
+    public function meetings(): HasMany
     {
         return $this->hasMany(Meeting::class, 'planned_course_eduframe_id', 'eduframe_id');
     }
 
+    public function getResponseAttribute($value): false|string
+    {
+        if(!$value) return '';
+
+        $dom = new \DOMDocument;
+        $dom->preserveWhiteSpace = false;
+        $dom->formatOutput = true;
+        $dom->loadXML($value);
+        return $dom->saveXML();
+    }
+
+    public function getExportedSuccessfullyAttribute(): bool
+    {
+        if(!$this->response) return false;
+
+        $dom = new \DOMDocument;
+        $dom->preserveWhiteSpace = false;
+        $dom->formatOutput = true;
+        $dom->loadXML($this->response);
+
+        if(!$dom->getElementsByTagName('total_rows')->length) return false;
+        if(!$dom->getElementsByTagName('accepted_rows')->length) return false;
+
+        $totalRows    = $dom->getElementsByTagName('total_rows')->item(0)->nodeValue;
+        $acceptedRows = $dom->getElementsByTagName('accepted_rows')->item(0)->nodeValue;
+
+        if($totalRows == 1) return $totalRows == $acceptedRows;
+        if($totalRows == 0) return false;
+
+        if($totalRows > 1) {
+            $acceptedRows = $dom->getElementsByTagName('Accepted');
+            foreach($acceptedRows as $acceptedRow) {
+                $personId = $acceptedRow->getElementsByTagName('person')->item(0)->nodeValue;
+
+                $externalPersonId = htmlspecialchars($this->user->getRIZIV());
+                $externalPersonId = str_replace(['-', ' '], '', $externalPersonId);
+                $externalPersonId = substr($externalPersonId, 1);
+                $externalPersonId = substr($externalPersonId, 0, 5);
+
+                if($personId == $externalPersonId) return true;
+            }
+        }
+
+        return false;
+    }
+
     /**
      * Import the data from Eduframe response
-     * 
+     *
      * @param array
      */
     public function importEduframeRecord($record)

@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Models\EduframeUser;
+use App\Models\PlannedCourse;
 use GuzzleHttp\Exception\RequestException;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -16,45 +17,47 @@ class ExportPlannedCourse implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     /**
-     * @var PlannedCourse The external course code
+     * @var PlannedCourse $plannedCourse The external course code
      */
-    protected $plannedCourse;
-
-    /**
-     * @var array<int> The user IDs to export
-     */
-    protected $userIds;
+    protected PlannedCourse $plannedCourse;
 
     /**
      * Create a new job instance.
      */
-    public function __construct($plannedCourse, $userIds)
+    public function __construct($plannedCourse)
     {
         $this->plannedCourse = $plannedCourse;
-        $this->userIds = $userIds;
     }
 
-    /**
-     * Execute the job.
-     */
     public function handle(): void
     {
-        $rizivNumbers = EduframeUser::whereIn('eduframe_id', $this->userIds)->get();
-        $rizivNumbers = $rizivNumbers->pluck('riziv_number')->toArray();
+        /**
+         * Get the users this way:
+         * 1. Get the planned course
+         * 2. Get all the meetings of the planned course
+         * 3. Get all the attendances of each meeting where the state is 'attended'
+         * 4. Get all the users of each attendance, a attendance has one user
+         * 5. Group everything, so you only get users that have attended all meetings
+         */
+        $meetingsCount = $this->plannedCourse->meetings->count();
 
-        $rizivNumbers = array_map(function ($rizivNumber) {
-            $rizivNumber = htmlspecialchars($rizivNumber);
-            $rizivNumber = str_replace(['-', ' '], '', $rizivNumber);
-            $rizivNumber = substr($rizivNumber, 1);
-            $rizivNumber = substr($rizivNumber, 0, 5);
+        $users = $this->plannedCourse->meetings->flatMap(function ($meeting) {
+            return $meeting->attendances->where('state', 'attended');
+        })
+            ->groupBy('enrollment_eduframe_id')
+            ->filter(function ($attendances) use ($meetingsCount) {
+                return $attendances->count() === $meetingsCount;
+            })
+            // Now only return the attendances users in one collection
+            ->flatMap(function ($attendances) {
+                return $attendances->map(function ($attendance) {
+                    return $attendance->user;
+                });
+            })
+            ->unique('eduframe_id');
 
-            return $rizivNumber;
-        }, $rizivNumbers);
+        $xml = new \SimpleXMLElement('<Entry/>');
 
-        Log::debug('Exporting planned course', ['externalCourseCode' => $this->plannedCourse->course->externalCourseCode, 'userIds' => $this->userIds, 'rizivNumbers' => $rizivNumbers]);
-        
-        $xml = new \SimpleXMLElement('<Entry></Entry>');
-        
         $settings = $xml->addChild('Settings');
         $settings->addChild('userID', htmlspecialchars(env('PE_USER_ID')));
         $settings->addChild('userRole', 'EDU');
@@ -65,10 +68,18 @@ class ExportPlannedCourse implements ShouldQueue
         $settings->addChild('languageID', 1);
         $settings->addChild('defaultLanguageID', 1);
 
-        foreach($rizivNumbers as $rizivNumber) {
+        foreach ($users as $user) {
+            // Format the RIZIV number
+            $externalPersonId = htmlspecialchars($user->riziv_number);
+            $externalPersonId = str_replace(['-', ' '], '', $externalPersonId);
+            $externalPersonId = substr($externalPersonId, 1);
+            $externalPersonId = substr($externalPersonId, 0, 5);
+
             $attendanceElement = $xml->addChild('Attendance');
-            $attendanceElement->addChild('externalCourseID', $this->plannedCourse->course->externalCourseCode);
-            $attendanceElement->addChild('externalPersonID', $rizivNumber);
+            $attendanceElement->addChild('PECourseID', $this->plannedCourse->pe_course_id);
+            $attendanceElement->addChild('externalPersonID', $externalPersonId);
+            $attendanceElement->addChild('PEEditionID', $this->plannedCourse->edition_id);
+//            $attendanceElement->addChild('PEEditionID', $this->plannedCourse->edition_id);
         }
 
         $dom = dom_import_simplexml($xml)->ownerDocument;
@@ -78,32 +89,36 @@ class ExportPlannedCourse implements ShouldQueue
 
         $peClient = new \GuzzleHttp\Client([
             'base_uri' => 'https://acc.pe-online.org/pe-services/pe-attendanceelearning/WriteAttendance.asmx',
-            'headers'  => [
+            'headers' => [
                 'Content-Type' => 'text/xml; charset=utf-8',
-                'SOAPAction'   => 'https://www.pe-online.org/pe-services/PE_AttendanceElearning/WriteAttendance/ProcessXML',
+                'SOAPAction' => 'https://www.pe-online.org/pe-services/PE_AttendanceElearning/WriteAttendance/ProcessXML',
+            ],
+            'request.options' => [
+                'exceptions' => false,
+            ],
+            'http_errors' => false,
+            'defaults' => [
+                'exceptions' => false,
             ],
         ]);
 
         $requestXML = new \SimpleXMLElement('<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"/>');
-        $body       = $requestXML->addChild('soap:Body');
+        $body = $requestXML->addChild('soap:Body');
         $processXML = $body->addChild('ProcessXML', null, 'https://www.pe-online.org/pe-services/PE_AttendanceElearning/WriteAttendance');
         $processXML->addChild('sXML', htmlspecialchars($xml->asXML()));
 
+
+        $response = $peClient->post('', [
+            'body' => $requestXML->asXML(),
+        ]);
+
+        $this->plannedCourse->update([
+            'exported_at' => now(),
+            'export_xml' => $requestXML->asXML(),
+            'response' => $response->getBody()->getContents(),
+        ]);
+
         Log::debug('Request XML: ' . $requestXML->asXML());
-
-        try {
-            $response = $peClient->post('', [
-                'body' => $requestXML->asXML(),
-            ]);
-        } catch (RequestException $e) {
-            $response = $e->getResponse();
-            Log::error('Error exporting planned course', ['response' => $response->getBody()->getContents()]);
-            throw $e;
-        }
-
-        $this->plannedCourse->response = $response->getBody()->getContents();
-        $this->plannedCourse->save();
-
         Log::debug('Response XML: ', ['response' => $response->getBody()->getContents()]);
     }
 }

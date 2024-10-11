@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\MeetingResource\RelationManagers;
 
+use App\Models\Attendance;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\RelationManagers\RelationManager;
@@ -18,18 +19,24 @@ class AttendancesRelationManager extends RelationManager
     {
         return $form
             ->schema([
-                Forms\Components\TextInput::make('eduframe_id')
-                    ->required()
-                    ->maxLength(255),
-            ]);
+                Forms\Components\Select::make('state')
+                    ->options([
+                        'attended' => 'Attended',
+                        'absent' => 'Absent',
+                    ])
+            ])
+            ->columns(1);
     }
 
     public function table(Table $table): Table
     {
         return $table
-            ->recordTitleAttribute('eduframe_id')
+            ->recordTitleAttribute('user.first_name')
             ->columns([
-                Tables\Columns\TextColumn::make('eduframe_id'),
+                Tables\Columns\TextColumn::make('name')
+                    ->getStateUsing(fn(Attendance $record) => $record->user->first_name . ' ' . $record->user->last_name),
+
+                Tables\Columns\TextColumn::make('state'),
             ])
             ->filters([
                 //

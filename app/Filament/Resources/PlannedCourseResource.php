@@ -4,21 +4,16 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\PlannedCourseResource\Pages;
 use App\Filament\Resources\PlannedCourseResource\RelationManagers;
-use App\Models\Attendance;
-use App\Models\EduframeUser;
-use App\Models\Enrollment;
-use App\Models\Meeting;
 use App\Models\PlannedCourse;
-use App\Models\User;
+use Creagia\FilamentCodeField\CodeField;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 
 class PlannedCourseResource extends Resource
 {
@@ -30,9 +25,17 @@ class PlannedCourseResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\Textarea::make('response')
-                    ->label('Response')
-                    ->disabled(),
+                Forms\Components\TextInput::make('pe_course_id'),
+                Forms\Components\TextInput::make('edition_id'),
+
+                Forms\Components\Placeholder::make('exported_successfully')
+                    ->content(fn(PlannedCourse $record) => $record->exported_successfully ? 'Ja' : 'Nee'),
+
+                CodeField::make('response')
+                    ->columnSpan(2)
+                    ->setLanguage(CodeField::XML)
+                    ->withLineNumbers()
+                    ->xmlField(),
             ]);
     }
 
@@ -40,70 +43,42 @@ class PlannedCourseResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('eduframe_id')
-                    ->searchable(),
-
                 Tables\Columns\TextColumn::make('course.name')
-                    ->words(4)
+                    ->label('Naam')
                     ->searchable(),
 
                 Tables\Columns\TextColumn::make('start_date')
-                    ->date('d-m-Y')
-                    ->sortable(),
+                    ->date('d-m-Y'),
 
                 Tables\Columns\TextColumn::make('end_date')
-                    ->date('d-m-Y')
-                    ->sortable(),
-
-                Tables\Columns\TextColumn::make('enrollments.count')
-                    ->label('Enrollments')
-                    ->searchable(),
+                    ->date('d-m-Y'),
             ])
             ->filters([
-                //
+                TernaryFilter::make('start_date_to_now')
+                    ->default(true)
+                    ->queries(
+                        true: fn (Builder $query) => $query->where('start_date', '<', now()),
+                        false: fn (Builder $query) => $query,
+                    ),
             ])
             ->actions([
-                // Tables\Actions\EditAction::make(),
-                Tables\Actions\Action::make('export_to_pe')
-                    ->label('Export')
-                    ->requiresConfirmation()
-                    ->action(function(PlannedCourse $plannedCourse) {
-                        $userIds = [];
-                        
-                        $plannedCourse->meetings->each(function(Meeting $meeting) use (&$userIds) {
-                            $meeting->attendances->each(function(Attendance $attendance) use (&$userIds, ) {
-                                if($attendance->state == 'attended') {
-                                    if(!isset($userIds[$attendance->enrollment->user->eduframe_id])) {
-                                        $userIds[$attendance->enrollment->user->eduframe_id] = 1;
-                                    } else {
-                                        $userIds[$attendance->enrollment->user->eduframe_id]++;
-                                    }
-                                }
-                            });
-                        });
-
-                        foreach($userIds as $userId => $attendanceCount) {
-                            if($attendanceCount !== $plannedCourse->meetings->count()) {
-                                unset($userIds[$userId]);
-                            }
-                        }
-
-                        $userIds = array_keys($userIds);
-
-                        dispatch(new \App\Jobs\ExportPlannedCourse($plannedCourse, $userIds));
-                    }),
+//                Tables\Actions\Action::make('export')
+//                    ->action(function($record) {
+//                        dispatch(new \App\Jobs\ExportPlannedCourse($record));
+//                    }),
             ])
             ->bulkActions([
-                // 
+                Tables\Actions\BulkActionGroup::make([
+                    Tables\Actions\DeleteBulkAction::make(),
+                ]),
             ])
-            ->defaultSort('start_date', 'desc')
-            ->modifyQueryUsing(fn (Builder $query): Builder => $query->whereDate('end_date', '<=', now()->toDateString()));
+            ->defaultSort('start_date', 'desc');
     }
 
     public static function getRelations(): array
     {
         return [
-            //
+            RelationManagers\MeetingsRelationManager::class,
         ];
     }
 

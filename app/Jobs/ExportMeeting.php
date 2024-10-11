@@ -30,7 +30,7 @@ class ExportMeeting implements ShouldQueue
 
     /**
      * Get the XML request for the meeting export
-     * 
+     *
      * @return \SimpleXMLElement
      */
     public function getXmlRequest(): \SimpleXMLElement
@@ -60,7 +60,7 @@ class ExportMeeting implements ShouldQueue
          */
 
         $xml = new \SimpleXMLElement('<Entry></Entry>');
-        
+
         $settings = $xml->addChild('Settings');
         $settings->addChild('userID', htmlspecialchars(env('PE_USER_ID')));
         $settings->addChild('userRole', 'EDU');
@@ -138,7 +138,7 @@ class ExportMeeting implements ShouldQueue
         Log::debug('Request XML: ' . $requestXML->asXML());
         Log::debug('Response XML: ', ['response' => $response->getBody()->getContents()]);
 
-        $$this->meeting->update([
+        $this->meeting->update([
             'exported'    => true,
             'exported_at' => now(),
             'export_xml'  => $requestXML->asXML(),

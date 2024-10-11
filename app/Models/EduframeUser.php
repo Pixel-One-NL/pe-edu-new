@@ -3,13 +3,14 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
 class EduframeUser extends Model
 {
 
     /**
      * The table associated with the model.
-     * 
+     *
      * @var string
      */
     protected $table = 'eduframe_users';
@@ -56,7 +57,7 @@ class EduframeUser extends Model
 
     /**
      * Get the enrollments for the user.
-     * 
+     *
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
     public function enrollments()
@@ -66,7 +67,7 @@ class EduframeUser extends Model
 
     /**
      * Get the user's RIZIV number
-     * 
+     *
      * @return string
      */
     public function getRizivNumberAttribute()
@@ -75,8 +76,18 @@ class EduframeUser extends Model
     }
 
     /**
+     * Get the user's attendances
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasManyThrough
+     */
+    public function attendances(): HasManyThrough
+    {
+        return $this->hasManyThrough(Attendance::class, Enrollment::class, 'user_eduframe_id', 'enrollment_eduframe_id', 'eduframe_id', 'eduframe_id');
+    }
+
+    /**
      * Import the data from Eduframe response
-     * 
+     *
      * @param array
      */
     public function importEduframeRecord($record)

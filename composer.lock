@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "88f57dd5d973c271d83802fc50824b8b",
+    "content-hash": "cdcda07ae344504af2fffe359e5906c0",
     "packages": [
         {
             "name": "anourvalar/eloquent-serialize",
@@ -350,6 +350,90 @@
                 }
             ],
             "time": "2023-12-11T17:09:12+00:00"
+        },
+        {
+            "name": "creagia/filament-code-field",
+            "version": "3.0.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/creagia/filament-code-field.git",
+                "reference": "0c6d7bf7cd35954e7625c10dd758d1aca7d73bcc"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/creagia/filament-code-field/zipball/0c6d7bf7cd35954e7625c10dd758d1aca7d73bcc",
+                "reference": "0c6d7bf7cd35954e7625c10dd758d1aca7d73bcc",
+                "shasum": ""
+            },
+            "require": {
+                "filament/filament": "^3.2",
+                "illuminate/contracts": "^9.0||^10.0||^11.0",
+                "php": "^8.2",
+                "spatie/laravel-package-tools": "^1.16"
+            },
+            "require-dev": {
+                "larastan/larastan": "^2.0.1",
+                "laravel/pint": "^1.0",
+                "nunomaduro/collision": "^6.0||^7.0",
+                "orchestra/testbench": "^7.0||^8.0",
+                "pestphp/pest": "^2.34.4",
+                "pestphp/pest-plugin-laravel": "^2.3.0",
+                "pestphp/pest-plugin-livewire": "^2.1.0",
+                "phpstan/extension-installer": "^1.1",
+                "phpstan/phpstan-deprecation-rules": "^1.0",
+                "phpstan/phpstan-phpunit": "^1.0",
+                "phpunit/phpunit": "^9.5||^10.0||^11.0",
+                "spatie/laravel-ray": "^1.26"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Creagia\\FilamentCodeField\\FilamentCodeFieldServiceProvider"
+                    ],
+                    "aliases": {
+                        "FilamentCodeField": "Creagia\\FilamentCodeField\\Facades\\FilamentCodeField"
+                    }
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Creagia\\FilamentCodeField\\": "src",
+                    "Creagia\\FilamentCodeField\\Database\\Factories\\": "database/factories"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Creagia",
+                    "email": "info@creagia.com",
+                    "role": "Developer"
+                }
+            ],
+            "description": "A Filamentphp input field to edit or view code data.",
+            "homepage": "https://github.com/creagia/filament-code-field",
+            "keywords": [
+                "code editor",
+                "creagia",
+                "filament",
+                "filament field",
+                "filament-code-field",
+                "laravel"
+            ],
+            "support": {
+                "issues": "https://github.com/creagia/filament-code-field/issues",
+                "source": "https://github.com/creagia/filament-code-field/tree/3.0.1"
+            },
+            "funding": [
+                {
+                    "url": "https://github.com/creagia",
+                    "type": "github"
+                }
+            ],
+            "time": "2024-03-21T13:14:19+00:00"
         },
         {
             "name": "danharrin/date-format-converter",
