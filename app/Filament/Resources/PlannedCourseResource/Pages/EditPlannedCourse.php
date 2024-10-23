@@ -21,6 +21,8 @@ class EditPlannedCourse extends EditRecord
 //                ->requiresConfirmation()
                 ->action(function() {
                     dispatch_sync(new ExportPlannedCourse($this->record));
+
+                    $this->fillForm();
                 }),
         ];
     }
