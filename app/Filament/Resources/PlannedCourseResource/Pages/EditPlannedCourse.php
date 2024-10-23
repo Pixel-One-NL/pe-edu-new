@@ -20,7 +20,7 @@ class EditPlannedCourse extends EditRecord
                 ->label('Export')
 //                ->requiresConfirmation()
                 ->action(function() {
-                    dispatch(new ExportPlannedCourse($this->record));
+                    dispatch_sync(new ExportPlannedCourse($this->record));
                 }),
         ];
     }
