@@ -76,9 +76,9 @@ class ExportPlannedCourse implements ShouldQueue
             $externalPersonId = substr($externalPersonId, 0, 5);
 
             $attendanceElement = $xml->addChild('Attendance');
-            $attendanceElement->addChild('PECourseID', $this->plannedCourse->pe_course_id);
-            $attendanceElement->addChild('externalPersonID', $externalPersonId);
-            $attendanceElement->addChild('PEMeetingID', $this->plannedCourse->edition_id);
+            $attendanceElement->addChild('PECourseID', htmlspecialchars($this->plannedCourse->pe_course_id));
+            $attendanceElement->addChild('externalPersonID', htmlspecialchars($externalPersonId));
+            $attendanceElement->addChild('PEEditionID', htmlspecialchars($this->plannedCourse->edition_id));
 //            $attendanceElement->addChild('PEEditionID', $this->plannedCourse->edition_id);
         }
 
