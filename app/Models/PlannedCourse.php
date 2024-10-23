@@ -100,19 +100,19 @@ class PlannedCourse extends Model
         if($totalRows == 1) return $totalRows == $acceptedRows;
         if($totalRows == 0) return false;
 
-        if($totalRows > 1) {
-            $acceptedRows = $dom->getElementsByTagName('Accepted');
-            foreach($acceptedRows as $acceptedRow) {
-                $personId = $acceptedRow->getElementsByTagName('person')->item(0)->nodeValue;
+        // if($totalRows > 1) {
+        //     $acceptedRows = $dom->getElementsByTagName('Accepted');
+        //     foreach($acceptedRows as $acceptedRow) {
+        //         $personId = $acceptedRow->getElementsByTagName('person')->item(0)->nodeValue;
 
-                $externalPersonId = htmlspecialchars($this->user->getRIZIV());
-                $externalPersonId = str_replace(['-', ' '], '', $externalPersonId);
-                $externalPersonId = substr($externalPersonId, 1);
-                $externalPersonId = substr($externalPersonId, 0, 5);
+        //         $externalPersonId = htmlspecialchars($this->user->getRIZIV());
+        //         $externalPersonId = str_replace(['-', ' '], '', $externalPersonId);
+        //         $externalPersonId = substr($externalPersonId, 1);
+        //         $externalPersonId = substr($externalPersonId, 0, 5);
 
-                if($personId == $externalPersonId) return true;
-            }
-        }
+        //         if($personId == $externalPersonId) return true;
+        //     }
+        // }
 
         return false;
     }
