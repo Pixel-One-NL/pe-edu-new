@@ -20,6 +20,6 @@ return Application::configure(basePath: dirname(__DIR__))
         //
     })
     ->withSchedule(function (Schedule $schedue) {
-        $schedue->call(new MasterImport)->daily();
+        // $schedue->call(new MasterImport())->daily();
     })
     ->create();
