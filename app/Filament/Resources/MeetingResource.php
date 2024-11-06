@@ -28,6 +28,14 @@ class MeetingResource extends Resource
             ]);
     }
 
+    public function getBreadcrumbs(): array
+    {
+        return [
+            'districts' => 'Daerah',
+            'Senarai'
+        ];
+    }
+
     public static function table(Table $table): Table
     {
         return $table

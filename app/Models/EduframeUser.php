@@ -85,6 +85,22 @@ class EduframeUser extends Model
         return $this->hasManyThrough(Attendance::class, Enrollment::class, 'user_eduframe_id', 'enrollment_eduframe_id', 'eduframe_id', 'eduframe_id');
     }
 
+    public function scopeGetByRizivNumber($query, $rizivNumber)
+    {
+        // Search in the column "custom", in the key "riziv-nummer" if the value is %LIKE% the given riziv number
+        return $query->where('custom->riziv-nummer', 'like', "%$rizivNumber%");
+    }
+
+    public function scopeGetByRizivNumbers($query, $rizivNumbers)
+    {
+        // Search in the column "custom", in the key "riziv-nummer" if the value is %LIKE% the given riziv numbers
+        return $query->where(function ($query) use ($rizivNumbers) {
+            foreach ($rizivNumbers as $rizivNumber) {
+                $query->orWhere('custom->riziv-nummer', 'like', "%$rizivNumber%");
+            }
+        });
+    }
+
     /**
      * Import the data from Eduframe response
      *

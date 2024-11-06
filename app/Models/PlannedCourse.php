@@ -23,7 +23,6 @@ class PlannedCourse extends Model
         'response',
         'edition_id',
         'exported_at',
-        'response',
         'pe_course_id',
     ];
 

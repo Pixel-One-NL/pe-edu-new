@@ -4,16 +4,20 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\PlannedCourseResource\Pages;
 use App\Filament\Resources\PlannedCourseResource\RelationManagers;
+use App\Models\EduframeUser;
 use App\Models\PlannedCourse;
 use Creagia\FilamentCodeField\CodeField;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Forms\Get;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Support\Facades\View;
+use Illuminate\Support\HtmlString;
 
 class PlannedCourseResource extends Resource
 {
@@ -28,14 +32,52 @@ class PlannedCourseResource extends Resource
                 Forms\Components\TextInput::make('pe_course_id'),
                 Forms\Components\TextInput::make('edition_id'),
 
-                Forms\Components\Placeholder::make('exported_successfully')
-                    ->content(fn(PlannedCourse $record) => $record->exported_successfully ? 'Ja' : 'Nee'),
+                Forms\Components\Group::make()
+                    ->schema([
+                        Forms\Components\Placeholder::make('exported_successfully')
+                        ->content(fn(PlannedCourse $record) => $record->exported_successfully ? 'Ja' : 'Nee'),
+                    ])
+                    ->columnSpan(2),
 
                 CodeField::make('response')
-                    ->columnSpan(2)
+                    ->columnSpan(1)
                     ->setLanguage(CodeField::XML)
                     ->withLineNumbers()
                     ->xmlField(),
+
+                Forms\Components\Placeholder::make('exported_users')
+                    ->content(function(Get $get) {
+                        $response = $get('response');
+
+                        if(!$response) {
+                            return new HtmlString(View::make('placeholders.exported-users')->with('users', [])->render());
+                        }
+
+                        $failedRizivNumbers = [];
+
+                        // Transform the response into xml
+                        $dom = new \DOMDocument;
+                        $dom->preserveWhiteSpace = false;
+                        $dom->formatOutput = true;
+                        $dom->loadXML($response);
+
+                        foreach($dom->getElementsByTagName('Error') as $error) {
+                            $errorMessage = $error->getElementsByTagName('errorMsg')->item(0)->nodeValue;
+
+                            // Check if the string contains 'ERROR1050'
+                            if(strpos($errorMessage, 'ERROR1050') !== false) {
+                                preg_match('/\d{5}/', $error->nodeValue, $matches);
+
+                                if(count($matches)) {
+                                    $failedRizivNumbers[] = $matches[0];
+                                }
+                            }
+                        }
+
+                        $eduframeUsers = EduframeUser::getByRizivNumbers($failedRizivNumbers)->get();
+
+                        return new HtmlString(View::make('placeholders.exported-users')->with('users', $eduframeUsers)->render());
+                    }),
             ]);
     }
 
