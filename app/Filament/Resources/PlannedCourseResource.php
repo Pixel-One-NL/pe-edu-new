@@ -74,6 +74,10 @@ class PlannedCourseResource extends Resource
                             }
                         }
 
+                        if(empty($failedRizivNumbers)) {
+                            return new HtmlString(View::make('placeholders.exported-users')->with('users', [])->render());
+                        }
+
                         $eduframeUsers = EduframeUser::getByRizivNumbers($failedRizivNumbers)->get();
 
                         return new HtmlString(View::make('placeholders.exported-users')->with('users', $eduframeUsers)->render());
