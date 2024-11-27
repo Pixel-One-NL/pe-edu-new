@@ -34,6 +34,9 @@ class CourseResource extends Resource
             ->columns([
                 TextColumn::make('name')
                     ->searchable(),
+
+                TextColumn::make('code')
+                    ->searchable(),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
