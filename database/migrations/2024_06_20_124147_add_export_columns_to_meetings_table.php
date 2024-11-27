@@ -12,9 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('meetings', function (Blueprint $table) {
-            $table->boolean('exported')->default(false)->after('description');
-            $table->timestamp('exported_at')->nullable()->after('exported');
-            $table->longText('export_xml')->nullable()->after('exported_at');
+            $table->boolean('exported')->default(false);
+            $table->timestamp('exported_at')->nullable();
+            $table->longText('export_xml')->nullable();
         });
     }
 

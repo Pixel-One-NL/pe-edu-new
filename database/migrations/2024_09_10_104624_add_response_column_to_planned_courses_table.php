@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::table('planned_courses', function (Blueprint $table) {
             $table->dateTime('exported_at')->nullable();
-            $table->text('response')->nullable()->after('exported_at');
+            $table->text('response')->nullable();
         });
     }
 

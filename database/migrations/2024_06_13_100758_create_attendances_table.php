@@ -21,7 +21,7 @@ return new class extends Migration
             $table->text('comment')->nullable();
             $table->boolean('exported')->default(false);
             $table->timestamp('exported_at')->nullable();
-            $table->string('eduframe_user_id')->nullable()->after('exported_at');
+            $table->string('eduframe_user_id')->nullable();
 
             $table->timestamps();
         });

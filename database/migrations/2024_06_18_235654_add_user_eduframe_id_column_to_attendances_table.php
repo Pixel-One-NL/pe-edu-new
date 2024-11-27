@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('attendances', function (Blueprint $table) {
-            $table->string('user_eduframe_id')->nullable()->after('exported_at');
+            $table->string('user_eduframe_id')->nullable();
         });
     }
 
