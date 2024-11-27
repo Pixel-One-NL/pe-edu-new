@@ -97,7 +97,7 @@ class ExportMeeting implements ShouldQueue
     public function handle(): void
     {
         $peClient = new \GuzzleHttp\Client([
-            'base_uri' => 'https://acc.pe-online.org/pe-services/pe-attendanceelearning/WriteAttendance.asmx',
+            'base_uri' => 'https://www.pe-online.org/pe-services/pe-attendanceelearning/WriteAttendance.asmx',
             'headers'  => [
                 'Content-Type' => 'text/xml; charset=utf-8',
                 'SOAPAction'   => 'https://www.pe-online.org/pe-services/PE_AttendanceElearning/WriteAttendance/ProcessXML',
