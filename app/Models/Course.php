@@ -59,5 +59,11 @@ class Course extends Model
         $data = Http::withHeader('Authorization', 'Bearer ' . $apiKey)->patch($url, [
             'code' => uniqid('smartedu_'),
         ])->json();
+
+        $code = $data['code'];
+
+        $this->code = $code;
+        $this->save();
+
     }
 }
